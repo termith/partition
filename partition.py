@@ -4,6 +4,8 @@ from subprocess import Popen, PIPE
 
 class PartitionInformer(object):
 
+    __metaclass__ = abc.ABCMeta
+
     @abc.abstractmethod
     def disk_list(self):
         pass
@@ -19,7 +21,8 @@ class WindowsInformer(PartitionInformer):
         diskpart = Popen("diskpart", stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
         out, err = diskpart.communicate("list disk")
         if err != '':
-            raise "Error!"
+            print(err)
+            return
 
         disk_list = []
         for idx, line in enumerate(out.split('\r')):
@@ -33,15 +36,14 @@ class WindowsInformer(PartitionInformer):
 
     def partition_list(self, n):
         diskpart = Popen("diskpart", stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
-        diskpart.communicate("select disk %d"), n
-
-        out, err = diskpart.communicate("list partition")
+        out, err = diskpart.communicate("select disk %s\r\n list partition" % (n, ))
         if err != '':
-            raise "Error"
+            print(err)
+            return
 
         partition_list = []
         for idx, line in enumerate(out.split('\r')):
-            if idx < 3 or idx == len(out.split('\r'))-1:
+            if idx < 12 or idx == len(out.split('\r'))-1:
                 continue
             partition_list.append([line.split()[1], line.split()[3]])
 
